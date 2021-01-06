@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Recruit Tag Scanner</string>
+    <!-- Settings Activity Title -->
+    <string name="title_activity_settings">Settings</string>
+</resources>
