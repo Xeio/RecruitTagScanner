@@ -10,6 +10,7 @@ import com.xeio.recruittagscanner.Globals
 import com.xeio.recruittagscanner.R
 import com.xeio.recruittagscanner.data.Operator
 import com.xeio.recruittagscanner.services.ScreenshotNotificationService
+import java.lang.Exception
 
 class RecruitmentManager {
     companion object {
@@ -24,9 +25,13 @@ class RecruitmentManager {
 
             if (foundTags.count() == 5) {
                 if (RecruitPrefsManager.getDeleteSetting(context)) {
-                    //screenshotFile.delete()
-                    var deleteCount = context.contentResolver.delete(screenshotUri, null, null)
-                    Log.i(Globals.TAG, "Deleted '$deleteCount' files.")
+                    try {
+                        val deleteCount = context.contentResolver.delete(screenshotUri, null, null)
+                        Log.i(Globals.TAG, "Deleted '$deleteCount' files.")
+                    }
+                    catch (e: Exception) {
+                        Log.i(Globals.TAG, "File delete failed: $e")
+                    }
                 }
 
                 var bestScore = 0
