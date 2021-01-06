@@ -56,19 +56,11 @@ class RecruitmentManager {
                     context.sendBroadcast(Intent(ScreenshotNotificationService.clearScreenshotNotification))
                 }
 
-                sendNotification(
-                    context,
-                    bestMinLevel >= 4,
-                    "Best Combo: ${bestCombo.joinToString()} $bestMinLevel*"
-                )
+                sendNotification(context, bestMinLevel >= 4, "Best Combo: ${bestCombo.joinToString()} $bestMinLevel*")
             }
         }
 
-        private fun <T> combinationsUpToLength(
-            tags: List<T>,
-            length: Int,
-            current: Int = 0
-        ): Sequence<List<T>> {
+        private fun <T> combinationsUpToLength(tags: List<T>, length: Int, current: Int = 0): Sequence<List<T>> {
             if (length == 0) return emptySequence()
             if (current >= tags.size) return emptySequence()
 

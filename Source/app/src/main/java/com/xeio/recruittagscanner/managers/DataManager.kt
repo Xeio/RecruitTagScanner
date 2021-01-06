@@ -11,12 +11,9 @@ import java.net.URL
 
 class DataManager {
     companion object {
-        var allTags: Array<Tag> =
-            GetTags()
-        var allTypes: Array<Type> =
-            GetTypes()
-        var allOperators: Array<Operator> =
-            GetOperators()
+        var allTags: Array<Tag> = GetTags()
+        var allTypes: Array<Type> = GetTypes()
+        var allOperators: Array<Operator> = GetOperators()
         var recruitableOperators: List<Operator> = List(0) { Operator() }
 
         private fun GetTags(): Array<Tag> {
@@ -53,10 +50,8 @@ class DataManager {
         var searchTags: List<String>
             get() {
                 var translatedTags = MutableList(0) { "" }
-                translatedTags.addAll(allTags.filter { t -> !t.tagEN.isNullOrBlank() }
-                    .map { t -> t.tagEN })
-                translatedTags.addAll(allTypes.filter { t -> !t.typeEN.isNullOrBlank() }
-                    .map { t -> t.typeEN })
+                translatedTags.addAll(allTags.filter { t -> !t.tagEN.isNullOrBlank() }.map { t -> t.tagEN })
+                translatedTags.addAll(allTypes.filter { t -> !t.typeEN.isNullOrBlank() } .map { t -> t.typeEN })
                 //searchTags = translatedTags
                 return translatedTags.distinct()
             }
