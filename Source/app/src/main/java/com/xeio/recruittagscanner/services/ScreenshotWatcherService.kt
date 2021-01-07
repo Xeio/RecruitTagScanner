@@ -50,26 +50,51 @@ class ScreenshotWatcherService : Service() {
                 if(uri == null) return
                 if(uri == lastScanned) return //Get duplicate notifications for files, ignore the last file we scanned
 
-                val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.IS_PENDING, MediaStore.MediaColumns.RELATIVE_PATH)
-                val query = this@ScreenshotWatcherService.contentResolver.query(uri, projection, null, null, null)
+                val projection = mutableListOf(MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.DATA)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    projection.addAll(listOf(MediaStore.MediaColumns.IS_PENDING, MediaStore.MediaColumns.RELATIVE_PATH))
+                }
+
+                val query = this@ScreenshotWatcherService.contentResolver.runCatching {
+                    query(uri, projection.toTypedArray(), null, null, MediaStore.Audio.Media.DATE_ADDED + " ASC")
+                }.onFailure {
+                    Log.i(Globals.TAG, "Media query failed $it")
+                }.getOrNull()
+
                 query?.use{ cursor ->
                     val nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
-                    val pathIndex = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
-                    val pendingIndex = cursor.getColumnIndex(MediaStore.MediaColumns.IS_PENDING)
-                    while(cursor.moveToNext()){
-                        val pending = cursor.getInt(pendingIndex)
-                        if(pending == 1) continue; //Skip pending
+
+                    if(cursor.moveToFirst()){
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            val pendingIndex = cursor.getColumnIndex(MediaStore.MediaColumns.IS_PENDING)
+                            val pending = cursor.getInt(pendingIndex)
+                            if (pending == 1) return; //Skip pending
+                        }
 
                         val name = cursor.getString(nameIndex)
-                        val path = cursor.getString(pathIndex)
+                        val path = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            val pathIndex = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+                            cursor.getString(pathIndex)
+                        } else { "" }
+
                         if(shouldScanFile(name, path)){
                             Log.i(Globals.TAG, "Scanning: $name, $path")
-                            lastScanned = uri
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                lastScanned = uri
+                            }
                             kotlin.runCatching {
-                                contentResolver.openFileDescriptor(uri, "r")?.use {
-                                    val bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    contentResolver.openFileDescriptor(uri, "r")?.use {
+                                        val bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor)
+                                        InputImage.fromBitmap(bitmap, 0)
+                                    }
+                                }
+                                else {
+                                    val dataIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+                                    val filePath = cursor.getString(dataIndex)
+                                    val bitmap = BitmapFactory.decodeFile(filePath)
                                     InputImage.fromBitmap(bitmap, 0)
-                                }.also { inputImage ->
+                                }?.also { inputImage ->
                                     val ocrTask = TextRecognition.getClient().process(inputImage)
                                     ocrTask.addOnSuccessListener { result ->
                                         RecruitmentManager.checkRecruitment(this@ScreenshotWatcherService, result.text, uri)
