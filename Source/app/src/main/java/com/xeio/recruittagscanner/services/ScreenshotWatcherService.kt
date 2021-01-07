@@ -41,23 +41,35 @@ class ScreenshotWatcherService : Service() {
         Log.i(Globals.TAG, "ScreenshotWatcherService start")
 
         contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            var lastScanned: Uri? = null
+
             override fun onChange(selfChange: Boolean, uri: Uri?) {
                 super.onChange(selfChange, uri)
+                Log.i(Globals.TAG, "ContentObserver: $uri")
                 if(uri == null) return
-                val projection = arrayOf(MediaStore.Images.Media.DISPLAY_NAME,
-                                            MediaStore.Images.Media.RELATIVE_PATH)
+                if(uri == lastScanned) return //Get duplicate notifications for files, ignore the last file we scanned
+
+                val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.IS_PENDING, MediaStore.MediaColumns.RELATIVE_PATH)
                 val query = this@ScreenshotWatcherService.contentResolver.query(uri, projection, null, null, null)
-                query?.let{ cursor ->
-                    val nameIndex = cursor .getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
-                    val pathIndex = cursor .getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+                query?.use{ cursor ->
+                    val nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                    val pathIndex = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+                    val pendingIndex = cursor.getColumnIndex(MediaStore.MediaColumns.IS_PENDING)
                     while(cursor.moveToNext()){
+                        val pending = cursor.getInt(pendingIndex)
+                        if(pending == 1) continue; //Skip pending
+
                         val name = cursor.getString(nameIndex)
                         val path = cursor.getString(pathIndex)
                         if(path.contains("Screenshot", true) || name.contains("Screenshot", true)){
+                            Log.i(Globals.TAG, "Scanning: $name, $path")
+                            lastScanned = uri
                             val inputImage = InputImage.fromFilePath(this@ScreenshotWatcherService, uri)
                             val ocrTask = TextRecognition.getClient().process(inputImage)
                             ocrTask.addOnSuccessListener { result ->
                                 RecruitmentManager.checkRecruitment(this@ScreenshotWatcherService, result.text, uri)
+                            }.addOnFailureListener{ ex ->
+                                Log.i(Globals.TAG, "OCR Failed: $ex")
                             }
                         }
                     }
