@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.database.ContentObserver
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.net.http.HttpResponseCache
 import android.os.*
@@ -61,15 +62,24 @@ class ScreenshotWatcherService : Service() {
 
                         val name = cursor.getString(nameIndex)
                         val path = cursor.getString(pathIndex)
-                        if(path.contains("Screenshot", true) || name.contains("Screenshot", true)){
+                        if(shouldScanFile(name, path)){
                             Log.i(Globals.TAG, "Scanning: $name, $path")
                             lastScanned = uri
-                            val inputImage = InputImage.fromFilePath(this@ScreenshotWatcherService, uri)
-                            val ocrTask = TextRecognition.getClient().process(inputImage)
-                            ocrTask.addOnSuccessListener { result ->
-                                RecruitmentManager.checkRecruitment(this@ScreenshotWatcherService, result.text, uri)
-                            }.addOnFailureListener{ ex ->
-                                Log.i(Globals.TAG, "OCR Failed: $ex")
+                            kotlin.runCatching {
+                                contentResolver.openFileDescriptor(uri, "r")?.use {
+                                    val bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor)
+                                    InputImage.fromBitmap(bitmap, 0)
+                                }.also { inputImage ->
+                                    val ocrTask = TextRecognition.getClient().process(inputImage)
+                                    ocrTask.addOnSuccessListener { result ->
+                                        RecruitmentManager.checkRecruitment(this@ScreenshotWatcherService, result.text, uri)
+                                    }.addOnFailureListener { ex ->
+                                        Log.i(Globals.TAG, "OCR Failed: $ex")
+                                    }
+                                }
+                            }.onFailure { e ->
+                                Log.i(Globals.TAG, "Unable to open file due to error $e")
+                                lastScanned = null //Maybe we can try again later
                             }
                         }
                     }
@@ -89,6 +99,11 @@ class ScreenshotWatcherService : Service() {
         )
 
         return START_STICKY
+    }
+
+    fun shouldScanFile(name: String, path: String) : Boolean{
+        return path.contains("Screenshot", true) || name.contains("Screenshot", true) ||
+        path.contains("Arknights", true) || name.contains("Arknights", true)
     }
 
     override fun onDestroy() {

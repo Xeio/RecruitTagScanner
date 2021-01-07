@@ -17,7 +17,9 @@ class ScreenshotNotificationService : NotificationListenerService() {
         val clearScreenshotNotification = "clearLastScreenshot"
 
         private fun isScreenshotNotification(sbn: StatusBarNotification) : Boolean{
-            return sbn.notification.extras.getString(Notification.EXTRA_TITLE)?.contains("Screenshot", true) == true
+            return sbn.notification.extras.getString(Notification.EXTRA_TITLE)?.let { title ->
+                title.contains("Screenshot", true) || title.contains("Screen captured", true)
+            } == true
         }
     }
 
