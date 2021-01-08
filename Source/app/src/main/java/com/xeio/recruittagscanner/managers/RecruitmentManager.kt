@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.xeio.recruittagscanner.Globals
@@ -81,12 +82,19 @@ class RecruitmentManager {
         private fun sendNotification(context: Context, minLevel: Int, bestTagCombo: Collection<String>, hasBot: Boolean) {
             val text = "Best Combo: ${bestTagCombo.joinToString()} $minLevel*" +
                             if(minLevel == 4 && hasBot) { " (Robot Possible)"} else{""}
+            val title = if (minLevel >= 4) "Recruitment Found" else "No 4* Recruit Pattern"
+
+            val headsUpView = RemoteViews(context.packageName, R.layout.heads_up_layout)
+            headsUpView.setTextViewText(R.id.successMessage, title)
+            headsUpView.setTextViewText(R.id.tagsMessage, text)
+
             val builder = NotificationCompat.Builder(context, Globals.RECRUIT_CHANNEL_ID)
                 .setSmallIcon(R.drawable.icon)
-                .setContentTitle(if (minLevel >= 4) "Recruitment Found" else "No 4* Recruit Pattern")
+                .setContentTitle(title)
                 .setContentText(text)
                 .setTimeoutAfter(10000)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCustomHeadsUpContentView(headsUpView)
 
             with(NotificationManagerCompat.from(context)) {
                 notify(123456, builder.build())
