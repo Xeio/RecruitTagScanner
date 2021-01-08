@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.RecruitTagScanner"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:fullBackupContent="false">
 
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"

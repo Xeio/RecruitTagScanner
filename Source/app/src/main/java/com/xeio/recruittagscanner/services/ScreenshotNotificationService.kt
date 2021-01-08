@@ -14,7 +14,7 @@ class ScreenshotNotificationService : NotificationListenerService() {
     var cancelNext = false
 
     companion object{
-        val clearScreenshotNotification = "clearLastScreenshot"
+        const val clearScreenshotNotification = "clearLastScreenshot"
 
         private fun isScreenshotNotification(sbn: StatusBarNotification) : Boolean{
             return sbn.notification.extras.getString(Notification.EXTRA_TITLE)?.let { title ->

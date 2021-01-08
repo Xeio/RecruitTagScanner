@@ -2,7 +2,7 @@ package com.xeio.recruittagscanner
 
 class Globals{
     companion object{
-        val TAG = "RecruitTagsScanner"
-        val RECRUIT_CHANNEL_ID = "Recruit Alerts"
+        const val TAG = "RecruitTagsScanner"
+        const val RECRUIT_CHANNEL_ID = "Recruit Alerts"
     }
 }

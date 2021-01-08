@@ -81,7 +81,7 @@ class RecruitmentManager {
         private fun sendNotification(context: Context, minLevel: Int, bestTagCombo: Collection<String>, hasBot: Boolean) {
             val text = "Best Combo: ${bestTagCombo.joinToString()} $minLevel*" +
                             if(minLevel == 4 && hasBot) { " (Robot Possible)"} else{""}
-            var builder = NotificationCompat.Builder(context, Globals.RECRUIT_CHANNEL_ID)
+            val builder = NotificationCompat.Builder(context, Globals.RECRUIT_CHANNEL_ID)
                 .setSmallIcon(R.drawable.icon)
                 .setContentTitle(if (minLevel >= 4) "Recruitment Found" else "No 4* Recruit Pattern")
                 .setContentText(text)
@@ -89,7 +89,6 @@ class RecruitmentManager {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
 
             with(NotificationManagerCompat.from(context)) {
-                // notificationId is a unique int for each notification that you must define
                 notify(123456, builder.build())
             }
         }
@@ -97,10 +96,10 @@ class RecruitmentManager {
         private fun calcScoreMinLevelAndBot(tags: List<String>, operators: List<Operator>): Triple<Int, Int, Boolean> {
             if (operators.count() == 0) return Triple(0, 0, false)
 
-            val maxLevel = operators.maxBy { it.level }!!.level
-            val minLevel = operators.minBy { it.level }!!.level
+            val maxLevel = operators.maxByOrNull { it.level }!!.level
+            val minLevel = operators.minByOrNull { it.level }!!.level
 
-            val minWithout1Stars = operators.filter{ it.level > 1}.minBy { it.level }?.level
+            val minWithout1Stars = operators.filter{ it.level > 1}.minByOrNull { it.level }?.level
             if(minWithout1Stars != null && minWithout1Stars > minLevel){
                 return Triple(minWithout1Stars * 1000 + maxLevel * 100 + (5 - tags.count()) * 10 + 1, minWithout1Stars, true)
             }

@@ -5,9 +5,9 @@ import androidx.preference.PreferenceManager
 
 class RecruitPrefsManager{
     companion object{
-        val autoDelete = "autoDelete"
-        val enable = "enable"
-        val hideNotification = "hideNotification"
+        const val autoDelete = "autoDelete"
+        const val enable = "enable"
+        const val hideNotification = "hideNotification"
 
         fun getDeleteSetting(context: Context) : Boolean{
             return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(autoDelete, false)

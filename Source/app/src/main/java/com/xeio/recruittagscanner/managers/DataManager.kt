@@ -11,12 +11,12 @@ import java.net.URL
 
 class DataManager {
     companion object {
-        var allTags: Array<Tag> = GetTags()
-        var allTypes: Array<Type> = GetTypes()
-        var allOperators: Array<Operator> = GetOperators()
+        var allTags: Array<Tag> = getTags()
+        var allTypes: Array<Type> = getTypes()
+        var allOperators: Array<Operator> = getOperators()
         var recruitableOperators: List<Operator> = List(0) { Operator() }
 
-        private fun GetTags(): Array<Tag> {
+        private fun getTags(): Array<Tag> {
             GlobalScope.launch {
                 val url = URL("https://aceship.github.io/AN-EN-Tags/json/tl-tags.json")
                 val inputReader = InputStreamReader(url.openConnection().getInputStream())
@@ -26,7 +26,7 @@ class DataManager {
             return Array(0) { Tag() }
         }
 
-        private fun GetTypes(): Array<Type> {
+        private fun getTypes(): Array<Type> {
             GlobalScope.launch {
                 val url = URL("https://aceship.github.io/AN-EN-Tags/json/tl-type.json")
                 val inputReader = InputStreamReader(url.openConnection().getInputStream())
@@ -36,7 +36,7 @@ class DataManager {
             return Array(0) { Type() }
         }
 
-        private fun GetOperators(): Array<Operator> {
+        private fun getOperators(): Array<Operator> {
             GlobalScope.launch {
                 val url = URL("https://aceship.github.io/AN-EN-Tags/json/tl-akhr.json")
                 val inputReader = InputStreamReader(url.openConnection().getInputStream())
@@ -49,10 +49,9 @@ class DataManager {
 
         var searchTags: List<String>
             get() {
-                var translatedTags = MutableList(0) { "" }
-                translatedTags.addAll(allTags.filter { t -> !t.tagEN.isNullOrBlank() }.map { t -> t.tagEN })
-                translatedTags.addAll(allTypes.filter { t -> !t.typeEN.isNullOrBlank() } .map { t -> t.typeEN })
-                //searchTags = translatedTags
+                val translatedTags = MutableList(0) { "" }
+                translatedTags.addAll(allTags.filter { t -> t.tagEN.isNotBlank() }.map { t -> t.tagEN })
+                translatedTags.addAll(allTypes.filter { t -> t.typeEN.isNotBlank() } .map { t -> t.typeEN })
                 return translatedTags.distinct()
             }
             private set(_) {}

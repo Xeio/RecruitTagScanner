@@ -20,7 +20,7 @@ import java.io.File
 import java.io.IOException
 
 class ScreenshotWatcherService : Service() {
-    var contentObserver: ContentObserver? = null
+    private var contentObserver: ContentObserver? = null
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -40,6 +40,7 @@ class ScreenshotWatcherService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(Globals.TAG, "ScreenshotWatcherService start")
+        super.onStartCommand(intent, flags, startId)
 
         contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
             var lastScanned: Uri? = null
@@ -68,7 +69,7 @@ class ScreenshotWatcherService : Service() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val pendingIndex = cursor.getColumnIndex(MediaStore.MediaColumns.IS_PENDING)
                             val pending = cursor.getInt(pendingIndex)
-                            if (pending == 1) return; //Skip pending
+                            if (pending == 1) return //Skip pending
                         }
 
                         val name = cursor.getString(nameIndex)
