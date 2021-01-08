@@ -56,7 +56,7 @@ class ScreenshotWatcherService : Service() {
                 }
 
                 val query = this@ScreenshotWatcherService.contentResolver.runCatching {
-                    query(uri, projection.toTypedArray(), null, null, MediaStore.Audio.Media.DATE_ADDED + " ASC")
+                    query(uri, projection.toTypedArray(), null, null, MediaStore.Audio.Media.DATE_ADDED + " DESC")
                 }.onFailure {
                     Log.i(Globals.TAG, "Media query failed $it")
                 }.getOrNull()
