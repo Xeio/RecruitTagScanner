@@ -68,6 +68,7 @@ class ScreenshotWatcherService : Service() {
                 super.onChange(selfChange, uri)
                 Log.i(Globals.TAG, "ContentObserver: $uri")
                 if(uri == null) return
+                if(!uri.query.isNullOrBlank()) return //Downloads app on Android 7 fires events with query strings on old screenshots sometimes, ignore them
                 if(uri == lastScanned) return //Get duplicate notifications for files, ignore the last file we scanned
 
                 val projection = mutableListOf(MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.DATA)
@@ -99,28 +100,19 @@ class ScreenshotWatcherService : Service() {
 
                         if(shouldScanFile(name, path)){
                             Log.i(Globals.TAG, "Scanning: $name, $path")
-                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                lastScanned = uri
-                            }
+                            lastScanned = uri
                             kotlin.runCatching {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    contentResolver.openFileDescriptor(uri, "r")?.use {
-                                        val bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor)
-                                        InputImage.fromBitmap(bitmap, 0)
-                                    }
-                                }
-                                else {
-                                    val dataIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
-                                    val filePath = cursor.getString(dataIndex)
-                                    val bitmap = BitmapFactory.decodeFile(filePath)
-                                    InputImage.fromBitmap(bitmap, 0)
-                                }?.also { inputImage ->
+                                contentResolver.openFileDescriptor(uri, "r")?.use {
+                                    val bitmap = BitmapFactory.decodeFileDescriptor(it.fileDescriptor)
+                                    val inputImage = InputImage.fromBitmap(bitmap, 0)
                                     val ocrTask = TextRecognition.getClient().process(inputImage)
                                     ocrTask.addOnSuccessListener { result ->
                                         RecruitmentManager.checkRecruitment(this@ScreenshotWatcherService, result.text, uri)
                                     }.addOnFailureListener { ex ->
                                         Log.i(Globals.TAG, "OCR Failed: $ex")
                                     }
+                                } ?: {
+                                    Log.i(Globals.TAG, "Failed to open file descriptor.")
                                 }
                             }.onFailure { e ->
                                 Log.i(Globals.TAG, "Unable to open file due to error $e")
