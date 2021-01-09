@@ -42,7 +42,26 @@ class ScreenshotWatcherService : Service() {
         Log.i(Globals.TAG, "ScreenshotWatcherService start")
         super.onStartCommand(intent, flags, startId)
 
-        contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        if(contentObserver == null) {
+            contentObserver = createObserver()
+
+            contentResolver.registerContentObserver(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    true,
+                    contentObserver!!
+            )
+            contentResolver.registerContentObserver(
+                    MediaStore.Images.Media.INTERNAL_CONTENT_URI,
+                    true,
+                    contentObserver!!
+            )
+        }
+
+        return START_STICKY
+    }
+
+    private fun createObserver(): ContentObserver{
+        return object : ContentObserver(Handler(Looper.getMainLooper())) {
             var lastScanned: Uri? = null
 
             override fun onChange(selfChange: Boolean, uri: Uri?) {
@@ -112,19 +131,6 @@ class ScreenshotWatcherService : Service() {
                 }
             }
         }
-
-        contentResolver.registerContentObserver(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            true,
-            contentObserver!!
-        )
-        contentResolver.registerContentObserver(
-            MediaStore.Images.Media.INTERNAL_CONTENT_URI,
-            true,
-            contentObserver!!
-        )
-
-        return START_STICKY
     }
 
     fun shouldScanFile(name: String, path: String) : Boolean{

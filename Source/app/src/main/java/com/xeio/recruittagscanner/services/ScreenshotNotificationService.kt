@@ -9,6 +9,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.xeio.recruittagscanner.Globals
+import com.xeio.recruittagscanner.managers.RecruitPrefsManager
 
 class ScreenshotNotificationService : NotificationListenerService() {
     var cancelNext = false
@@ -31,6 +32,10 @@ class ScreenshotNotificationService : NotificationListenerService() {
 
         receiver = NotificationServiceBroadcastReceiver(this)
         registerReceiver(receiver, IntentFilter().apply { addAction(clearScreenshotNotification) })
+
+        if(RecruitPrefsManager.getEnableSetting(this)){
+            Intent(this, ScreenshotWatcherService::class.java).also { intent -> startService(intent) }
+        }
     }
 
     override fun onDestroy() {
@@ -52,7 +57,6 @@ class ScreenshotNotificationService : NotificationListenerService() {
 
     private class NotificationServiceBroadcastReceiver(val notifyService: ScreenshotNotificationService) : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
-
             if (intent.action == clearScreenshotNotification) {
                 Log.i(Globals.TAG, "Clearing notifications")
                 notifyService.activeNotifications
@@ -66,7 +70,6 @@ class ScreenshotNotificationService : NotificationListenerService() {
                         Log.i(Globals.TAG, "Clearing notification: ${sbn.notification.extras.getString(Notification.EXTRA_TITLE)}")
                         notifyService.cancelNotification(sbn.key)
                     }
-
             }
         }
     }
