@@ -71,7 +71,7 @@ class ScreenshotWatcherService : Service() {
                 if(!uri.query.isNullOrBlank()) return //Downloads app on Android 7 fires events with query strings on old screenshots sometimes, ignore them
                 if(uri == lastScanned) return //Get duplicate notifications for files, ignore the last file we scanned
 
-                val projection = mutableListOf(MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.DATA)
+                val projection = mutableListOf(MediaStore.MediaColumns.DISPLAY_NAME)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     projection.addAll(listOf(MediaStore.MediaColumns.IS_PENDING, MediaStore.MediaColumns.RELATIVE_PATH))
                 }
