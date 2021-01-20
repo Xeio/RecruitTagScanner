@@ -16,6 +16,8 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.xeio.recruittagscanner.Globals
 import com.xeio.recruittagscanner.managers.DataManager
 import com.xeio.recruittagscanner.managers.RecruitmentManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 
@@ -33,9 +35,7 @@ class ScreenshotWatcherService : Service() {
         createNotificationChannel()
         enableHttpCache()
 
-        //Trigger static constructor for data, starts the async data fetches
-        //Maybe find a better way to do this (while avoiding network on main thread?)
-        DataManager.allTags
+        GlobalScope.launch { DataManager.init() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
