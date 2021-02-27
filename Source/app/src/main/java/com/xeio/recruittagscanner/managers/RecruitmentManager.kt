@@ -1,5 +1,6 @@
 package com.xeio.recruittagscanner.managers
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -13,6 +14,8 @@ import com.xeio.recruittagscanner.R
 import com.xeio.recruittagscanner.data.Operator
 import com.xeio.recruittagscanner.services.ScreenshotNotificationService
 import java.lang.Exception
+import java.net.URLEncoder
+import kotlin.text.Charsets.UTF_8
 
 class RecruitmentManager {
     companion object {
@@ -60,7 +63,7 @@ class RecruitmentManager {
                     context.sendBroadcast(Intent(ScreenshotNotificationService.clearScreenshotNotification))
                 }
 
-                sendNotification(context, bestMinLevel, bestCombo, bestHasBot)
+                sendNotification(context, bestMinLevel, bestCombo, bestHasBot, foundTags)
             }
         }
 
@@ -80,15 +83,12 @@ class RecruitmentManager {
             }
         }
 
-        private fun sendNotification(context: Context, minLevel: Int, bestTagCombo: Collection<String>, hasBot: Boolean) {
+        private fun sendNotification(context: Context, minLevel: Int, bestTagCombo: Collection<String>, hasBot: Boolean, allTags: Collection<String>) {
             if (minLevel > 3) {
-                val text = "Best Combo: ${bestTagCombo.joinToString()} $minLevel*" +
-                        if (minLevel == 4 && hasBot) {
-                            " (Robot Possible)"
-                        } else {
-                            ""
-                        }
-                val title = "Recruitment Found"
+                val text = "Best Combo: ${bestTagCombo.joinToString()}" +
+                        if (minLevel == 4 && hasBot) { " (Robot Possible)" } else { "" } +
+                        if (minLevel > 4) { "\n Tap to show combinations" } else{""}
+                val title = "$minLevel* Recruitment Found"
 
                 val headsUpView = RemoteViews(context.packageName, R.layout.heads_up_layout)
                 headsUpView.setTextViewText(R.id.successMessage, title)
@@ -98,9 +98,16 @@ class RecruitmentManager {
                         .setSmallIcon(R.drawable.icon)
                         .setContentTitle(title)
                         .setContentText(text)
-                        .setTimeoutAfter(10000)
+                        .setTimeoutAfter(if (minLevel > 4) { 30000 } else { 10000 })
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
                         .setCustomHeadsUpContentView(headsUpView)
+
+                if(minLevel > 4) {
+                    val uri = Uri.parse("https://xeio.github.io/AN-EN-Tags/akhr.html#" + URLEncoder.encode(allTags.joinToString(","), UTF_8.name()))
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+                    builder.setContentIntent(pendingIntent)
+                }
 
                 with(NotificationManagerCompat.from(context)) {
                     notify(123456, builder.build())
