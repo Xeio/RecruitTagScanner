@@ -48,7 +48,7 @@ class RecruitmentManager {
                     if (comboOperators.isEmpty()) continue
 
                     val (score, minLevel, hasBot) = calcScoreMinLevelAndBot(combo, comboOperators)
-                    if (score > bestScore) {
+                    if ((score > bestScore && minLevel > 3) || (bestMinLevel < 4 && combo.contains("Robot"))) {
                         bestCombo = combo
                         bestMinLevel = minLevel
                         bestScore = score
@@ -105,6 +105,9 @@ class RecruitmentManager {
                 with(NotificationManagerCompat.from(context)) {
                     notify(123456, builder.build())
                 }
+            } else if (bestTagCombo.contains("Robot")) {
+                val toast = Toast.makeText(context, "Rare robot tag", Toast.LENGTH_LONG)
+                toast.show()
             } else {
                 val toast = Toast.makeText(context, "No 4* Combos", Toast.LENGTH_SHORT)
                 toast.show()
