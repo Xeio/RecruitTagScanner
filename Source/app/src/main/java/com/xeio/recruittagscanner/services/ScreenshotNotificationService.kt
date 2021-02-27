@@ -10,9 +10,10 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.xeio.recruittagscanner.Globals
 import com.xeio.recruittagscanner.managers.RecruitPrefsManager
+import java.util.*
 
 class ScreenshotNotificationService : NotificationListenerService() {
-    var cancelNext = false
+    var cancelNextTimeout: Long? = null
 
     companion object{
         const val clearScreenshotNotification = "clearLastScreenshot"
@@ -48,22 +49,22 @@ class ScreenshotNotificationService : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
 
-        if(cancelNext && sbn != null && isScreenshotNotification(sbn)){
+        if(cancelNextTimeout != null && Calendar.getInstance().timeInMillis < cancelNextTimeout!! && sbn != null && isScreenshotNotification(sbn)){
             Log.i(Globals.TAG, "Delayed cancel of notification: ${sbn.notification.extras.getString("android.title")}")
             cancelNotification(sbn.key)
-            cancelNext = false
+            cancelNextTimeout = null
         }
     }
 
     private class NotificationServiceBroadcastReceiver(val notifyService: ScreenshotNotificationService) : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             if (intent.action == clearScreenshotNotification) {
-                Log.i(Globals.TAG, "Clearing notifications")
+                Log.i(Globals.TAG, "Attempting to clear notifications")
                 notifyService.activeNotifications
                     .filter{ sbn -> isScreenshotNotification(sbn)}
                     .ifEmpty {
                         Log.i(Globals.TAG, "No notifications found, trying to clear next...")
-                        notifyService.cancelNext = true
+                        notifyService.cancelNextTimeout = Calendar.getInstance().timeInMillis + 5000
                         listOf()
                     }
                     .forEach{ sbn ->
