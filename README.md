@@ -1,7 +1,7 @@
 # RecruitTagScanner
  Scans Arknights screenshots for recruit tags that will give a 4* or better operator
 
-![App in action](https://i.imgur.com/XJDYggI.gif)
+![App in action](https://i.imgur.com/PaMQ9eQ.gif)
 
 Just take a screenshot of the recruitment screen and the app will attempt to detect the tags present and show a notification (either with a 4* or better match, or that there is no 4* or better combination).
 
