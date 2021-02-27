@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.RemoteViews
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.xeio.recruittagscanner.Globals
@@ -80,24 +81,33 @@ class RecruitmentManager {
         }
 
         private fun sendNotification(context: Context, minLevel: Int, bestTagCombo: Collection<String>, hasBot: Boolean) {
-            val text = "Best Combo: ${bestTagCombo.joinToString()} $minLevel*" +
-                            if(minLevel == 4 && hasBot) { " (Robot Possible)"} else{""}
-            val title = if (minLevel >= 4) "Recruitment Found" else "No 4* Recruit Pattern"
+            if (minLevel > 3) {
+                val text = "Best Combo: ${bestTagCombo.joinToString()} $minLevel*" +
+                        if (minLevel == 4 && hasBot) {
+                            " (Robot Possible)"
+                        } else {
+                            ""
+                        }
+                val title = "Recruitment Found"
 
-            val headsUpView = RemoteViews(context.packageName, R.layout.heads_up_layout)
-            headsUpView.setTextViewText(R.id.successMessage, title)
-            headsUpView.setTextViewText(R.id.tagsMessage, text)
+                val headsUpView = RemoteViews(context.packageName, R.layout.heads_up_layout)
+                headsUpView.setTextViewText(R.id.successMessage, title)
+                headsUpView.setTextViewText(R.id.tagsMessage, text)
 
-            val builder = NotificationCompat.Builder(context, Globals.RECRUIT_CHANNEL_ID)
-                .setSmallIcon(R.drawable.icon)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setTimeoutAfter(10000)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCustomHeadsUpContentView(headsUpView)
+                val builder = NotificationCompat.Builder(context, Globals.RECRUIT_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.icon)
+                        .setContentTitle(title)
+                        .setContentText(text)
+                        .setTimeoutAfter(10000)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setCustomHeadsUpContentView(headsUpView)
 
-            with(NotificationManagerCompat.from(context)) {
-                notify(123456, builder.build())
+                with(NotificationManagerCompat.from(context)) {
+                    notify(123456, builder.build())
+                }
+            } else {
+                val toast = Toast.makeText(context, "No 4* Combos", Toast.LENGTH_SHORT)
+                toast.show()
             }
         }
 
