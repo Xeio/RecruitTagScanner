@@ -20,8 +20,7 @@ import kotlin.text.Charsets.UTF_8
 class RecruitmentManager {
     companion object {
         fun checkRecruitment(context: Context, text: String, screenshotUri: Uri) {
-            val lines = text.lines()
-            val foundTags = DataManager.searchTags.filter { tag -> lines.any { line -> tag.equals(line,true) } }.toList()
+            val foundTags = findTagsInText(text)
 
             Log.i(Globals.TAG, "Detected tags: " + foundTags.joinToString())
             if (foundTags.count() < 5) {
@@ -65,6 +64,16 @@ class RecruitmentManager {
 
                 sendNotification(context, bestMinLevel, bestCombo, bestHasBot, foundTags)
             }
+        }
+
+        private fun findTagsInText(text: String): List<String> {
+            val invalidCharacters = Regex("[^- A-Za-z]") //Very rarely can get additional punctuation in parsed lines like an extra period
+            var smoothedLines = text.lines().map { line -> line.replace(invalidCharacters, "") }.toMutableList()
+            if(smoothedLines.indexOf("Crowd-Control") != -1){
+                //AK Toolbox doesn't have the hyphen in Crowd-Control so we have to work around
+               smoothedLines[smoothedLines.indexOf("Crowd-Control")] = "Crowd Control"
+            }
+            return DataManager.searchTags.filter { tag -> smoothedLines.any { line -> tag.equals(line,true) } }.toList()
         }
 
         private fun <T> combinationsUpToLength(tags: List<T>, length: Int, current: Int = 0): Sequence<List<T>> {
