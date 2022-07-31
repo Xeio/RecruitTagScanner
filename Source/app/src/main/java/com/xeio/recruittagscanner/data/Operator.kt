@@ -39,7 +39,8 @@ class Operator
     var globalHidden: Boolean = false
 
     val localizedTags: List<String> by lazy {
-        tags.map { charTag -> DataManager.allTags.first { tag -> tag.tagCN == charTag}.tagEN }
-            .plus(DataManager.allTypes.first { type -> type.typeCN == this.type}.typeEN)
+        tags.map { charTag -> DataManager.allTags.firstOrNull { tag -> tag.tagCN == charTag }?.tagEN }
+            .plus(DataManager.allTypes.firstOrNull { type -> type.typeCN == this.type }?.typeEN)
+            .mapNotNull { it }
     }
 }
